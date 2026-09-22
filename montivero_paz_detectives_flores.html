@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detectives de flores - Sala de 5</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fff8fc;
+    color: #263238;
+  }
+  header {
+    background: #f7d9ee;
+    padding: 22px 18px;
+    text-align: center;
+    border-bottom: 4px solid #d8a8ca;
+  }
+  h1 { margin: 0 0 8px; font-size: 2.2rem; }
+  .subtitle { margin: 0; font-size: 1.15rem; }
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 14px;
+    background: #ffffff;
+  }
+  button {
+    border: 2px solid #5c3568;
+    background: #ffffff;
+    color: #3d2446;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button:hover, button:focus { outline: 3px solid #f0a9d9; }
+  .container {
+    max-width: 900px;
+    margin: 22px auto;
+    padding: 0 18px 30px;
+  }
+  .card {
+    background: white;
+    border: 2px solid #e1c7dc;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  }
+  .progress {
+    font-weight: bold;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .flower-box {
+    text-align: center;
+    background: #fff0f8;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  .flower-symbol { font-size: 5rem; }
+  .flower-name { font-size: 1.45rem; font-weight: bold; margin-top: 8px; }
+  .question { font-size: 1.3rem; text-align: center; line-height: 1.4; }
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .option { min-height: 62px; font-size: 1.05rem; }
+  .feedback {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    line-height: 1.45;
+    background: #f5eef7;
+  }
+  .hidden { display: none; }
+  .next {
+    display: block;
+    margin: 18px auto 0;
+    background: #ead7f0;
+  }
+  .metacog {
+    margin-top: 20px;
+    padding: 18px;
+    background: #eef7f1;
+    border-radius: 16px;
+  }
+  .small { font-size: .95rem; }
+  .counter { text-align:center; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌸 Detectives de flores 🌸</h1>
+  <p class="subtitle">Sala de 5 · Observamos, pensamos y descubrimos</p>
+</header>
+
+<div class="controls" aria-label="Opciones de accesibilidad">
+  <button onclick="changeFont(1)">A+ Aumentar letra</button>
+  <button onclick="changeFont(-1)">A- Disminuir letra</button>
+  <button onclick="speak()">🔊 Escuchar consigna</button>
+  <button onclick="restart()">🔄 Empezar de nuevo</button>
+</div>
+
+<main class="container">
+  <section class="card">
+    <div class="progress" id="progress"></div>
+
+    <div class="flower-box">
+      <div class="flower-symbol" id="symbol" aria-label="Representación visual de una flor">🌸</div>
+      <div class="flower-name" id="visualName">Observá con atención</div>
+    </div>
+
+    <p class="question" id="question"></p>
+
+    <div class="options" id="options"></div>
+
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+
+    <button class="next hidden" id="nextBtn" onclick="nextQuestion()">➡️ Siguiente desafío</button>
+
+    <div class="metacog hidden" id="metacog">
+      <h2>🌱 ¿Cómo descubriste la respuesta?</h2>
+      <p>Elegí qué te ayudó a pensar:</p>
+      <div class="options">
+        <button onclick="finishReflection('El color')">👀 El color</button>
+        <button onclick="finishReflection('La forma')">🌸 La forma</button>
+        <button onclick="finishReflection('Las hojas')">🌿 Las hojas</button>
+        <button onclick="finishReflection('Otra característica')">🔎 Otra característica</button>
+      </div>
+      <p id="reflection" class="counter"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+const flowers = [
+  {
+    name: "Lapacho rosado",
+    symbol: "🌸",
+    question: "Observá la flor. ¿Cuál de estas opciones corresponde al lapacho rosado?",
+    options: ["Lapacho rosado", "Rosa", "Magnolia"],
+    answer: "Lapacho rosado",
+    clues: [
+      "Pista 1: Sus flores suelen ser de color rosado.",
+      "Pista 2: Es una flor que podemos encontrar en un árbol.",
+      "Pista 3: Su nombre incluye el color de sus flores."
+    ]
+  },
+  {
+    name: "Rosa",
+    symbol: "🌹",
+    question: "Mirá con atención. ¿Cuál de estas flores es la rosa?",
+    options: ["Ceibo", "Rosa", "Azalea"],
+    answer: "Rosa",
+    clues: [
+      "Pista 1: Tiene pétalos que se encuentran formando una flor muy reconocible.",
+      "Pista 2: Puede encontrarse en distintos colores.",
+      "Pista 3: Su nombre es también el nombre de un color."
+    ]
+  },
+  {
+    name: "Azalea",
+    symbol: "🌺",
+    question: "Observá la forma y el color. ¿Cuál es la azalea?",
+    options: ["Magnolia", "Azalea", "Ceibo"],
+    answer: "Azalea",
+    clues: [
+      "Pista 1: Es una flor que puede presentarse en grupos de muchas flores.",
+      "Pista 2: Puede tener colores rosados, rojos o blancos.",
+      "Pista 3: Su nombre comienza con A."
+    ]
+  },
+  {
+    name: "Magnolia",
+    symbol: "🤍",
+    question: "¿Cuál de estas opciones corresponde a la magnolia?",
+    options: ["Magnolia", "Lapacho rosado", "Rosa"],
+    answer: "Magnolia",
+    clues: [
+      "Pista 1: Puede tener flores grandes.",
+      "Pista 2: Algunas magnolias tienen flores blancas.",
+      "Pista 3: Su nombre comienza con M."
+    ]
+  },
+  {
+    name: "Ceibo",
+    symbol: "🌺",
+    question: "Observá atentamente. ¿Cuál es el ceibo?",
+    options: ["Azalea", "Ceibo", "Magnolia"],
+    answer: "Ceibo",
+    clues: [
+      "Pista 1: Sus flores suelen ser rojas.",
+      "Pista 2: Crece en un árbol.",
+      "Pista 3: Es una flor muy conocida de nuestro país."
+    ]
+  }
+];
+
+let current = 0;
+let attempts = 0;
+let fontSize = 1;
+
+function render() {
+  const f = flowers[current];
+  attempts = 0;
+  document.getElementById("progress").textContent =
+    "Desafío " + (current + 1) + " de " + flowers.length;
+  document.getElementById("symbol").textContent = f.symbol;
+  document.getElementById("visualName").textContent = "🌿 Observá y pensá";
+  document.getElementById("question").textContent = f.question;
+
+  const options = document.getElementById("options");
+  options.innerHTML = "";
+  f.options.forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "option";
+    b.textContent = opt;
+    b.onclick = () => checkAnswer(opt);
+    options.appendChild(b);
+  });
+
+  const feedback = document.getElementById("feedback");
+  feedback.textContent = "💡 Si necesitás ayuda, podés pedir una pista.";
+  document.getElementById("nextBtn").classList.add("hidden");
+  document.getElementById("metacog").classList.add("hidden");
+  document.getElementById("reflection").textContent = "";
+}
+
+function checkAnswer(choice) {
+  const f = flowers[current];
+  const feedback = document.getElementById("feedback");
+
+  if (choice === f.answer) {
+    feedback.textContent = "🎉 ¡Muy bien! Observaste, pensaste y encontraste la respuesta. " +
+      "Ahora contá qué característica te ayudó.";
+    document.getElementById("nextBtn").classList.remove("hidden");
+    document.getElementById("metacog").classList.remove("hidden");
+  } else {
+    attempts++;
+    const clueIndex = Math.min(attempts - 1, f.clues.length - 1);
+    feedback.textContent = "🌱 Todavía no. " + f.clues[clueIndex] +
+      " Volvé a observar y probá otra vez.";
+  }
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= flowers.length) {
+    current = 0;
+    alert("🌷 ¡Completaste todos los desafíos! Podés volver a empezar para seguir observando las flores.");
+  }
+  render();
+}
+
+function finishReflection(answer) {
+  document.getElementById("reflection").textContent =
+    "¡Genial! Pensaste usando: " + answer + ". Cada observación nos ayuda a aprender.";
+}
+
+function changeFont(direction) {
+  fontSize = Math.max(.85, Math.min(1.35, fontSize + direction * .1));
+  document.body.style.fontSize = fontSize + "em";
+}
+
+function speak() {
+  const text = document.getElementById("question").textContent;
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "es-AR";
+    utter.rate = .9;
+    window.speechSynthesis.speak(utter);
+  } else {
+    alert("La lectura en voz alta no está disponible en este navegador.");
+  }
+}
+
+function restart() {
+  current = 0;
+  render();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+render();
+</script>
+</body>
+</html>
